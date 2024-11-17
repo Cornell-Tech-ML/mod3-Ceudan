@@ -3,6 +3,8 @@ from __future__ import annotations
 
 # import debugpy
 
+from operator import index
+from tkinter.tix import MAX
 from typing import TYPE_CHECKING, Callable, Optional, Type
 
 import numpy as np
@@ -10,6 +12,7 @@ from typing_extensions import Protocol
 
 from . import operators
 from .tensor_data import (
+    MAX_DIMS,
     broadcast_index,
     index_to_position,
     shape_broadcast,
@@ -283,20 +286,14 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # avoid repeated initializations
-        out_ind = np.array([-1 for x in out_shape])
-        in_ind = np.array([-1 for x in in_shape])
-        # print("out_shape", out_shape)
-        # print("in_shape", in_shape)
-        # print("out_ind", out_ind)
-        # print("in_ind", in_ind)
-
-        # iterate over output elements in out_storage, and find appropriate input from in_storage
-        for out_pos in range(len(out)):
-            to_index(out_pos, out_shape, out_ind)
-            broadcast_index(out_ind, out_shape, in_shape, in_ind)
-            in_pos = index_to_position(in_ind, in_strides)
-            out[out_pos] = fn(in_storage[in_pos])
+        out_index:Index = np.zeros(MAX_DIMS, dtype=np.int16)
+        in_index:Index = np.zeros(MAX_DIMS, dtype=np.int16)
+        for i in range(len(out)):
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            o = index_to_position(out_index, out_strides)
+            j = index_to_position(in_index, in_strides)
+            out[o] = fn(in_storage[j])
 
     return _map
 
@@ -343,18 +340,19 @@ def tensor_zip(
         b_strides: Strides,
     ) -> None:
         # avoid repeated initializations
-        out_ind = np.array([-1 for x in out_shape])
-        a_ind = np.array([-1 for x in a_shape])
-        b_ind = np.array([-1 for x in b_shape])
+        out_index:Index = np.zeros(MAX_DIMS, dtype=np.int32)
+        a_index:Index = np.zeros(MAX_DIMS, dtype=np.int32)    
+        b_index:Index = np.zeros(MAX_DIMS, dtype=np.int32)  
 
         # iterate over output elements in out_storage, and find appropriate input from a_storage and b_storage
-        for out_pos in range(len(out)):
-            to_index(out_pos, out_shape, out_ind)
-            broadcast_index(out_ind, out_shape, a_shape, a_ind)
-            broadcast_index(out_ind, out_shape, b_shape, b_ind)
-            a_pos = index_to_position(a_ind, a_strides)
-            b_pos = index_to_position(b_ind, b_strides)
-            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
+        for i in range(len(out)):
+            to_index(i, out_shape, out_index)
+            o = index_to_position(out_index, out_strides)
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            j = index_to_position(a_index, a_strides)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            k = index_to_position(b_index, b_strides)
+            out[o] = fn(a_storage[j], b_storage[k])
 
     return _zip
 
@@ -386,47 +384,15 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        if reduce_dim < 0:
-            # The scenario where we reduce over all dimensions
-            # I believe -77 is my code for "reduce over all dimensions", but reduce_dim<0 to be same
-            for i in range(0, len(a_storage)):
-                out[0] = fn(out[0], a_storage[i])
-            return
-        else:
-            # Otherwise reduce over a single dimension
-            out_ind = np.zeros_like(out_shape)  # Initialize index for the output
-            a_ind = np.zeros_like(a_shape)  # Initialize index for the input
-            assert len(out_ind) == len(a_ind)
-
-            for out_pos in range(
-                len(out)
-            ):  # Iterate over each element in the output storage
-                # Get the corresponding index in the output tensor
-                to_index(out_pos, out_shape, out_ind)
-
-                # Copy the output index to input index for dimensions other than the reduction dimension
-                #  shapes should be same length
-                for i in range(len(out_shape)):
-                    a_ind[i] = out_ind[i]
-
-                reduction_result = None  # Initialize the reduction result
-                # Iterate over the reduction dimension
-                for i in range(a_shape[reduce_dim]):
-                    a_ind[reduce_dim] = (
-                        i  # Vary the index along the reduction dimension
-                    )
-                    a_pos = index_to_position(a_ind, a_strides)
-                    if reduction_result is None:
-                        reduction_result = a_storage[
-                            a_pos
-                        ]  # Initialize the reduction result
-                    else:
-                        reduction_result = fn(
-                            reduction_result, a_storage[a_pos]
-                        )  # Apply the reduction function
-
-                # Store the result back in the output storage
-                out[out_pos] = reduction_result
+        out_index:Index = np.zeros(MAX_DIMS, dtype=np.int32)
+        reduce_size = a_shape[reduce_dim]
+        for i in range(len(out)):
+            to_index(i, out_shape, out_index)
+            o = index_to_position(out_index, out_strides)
+            for s in range(reduce_size):
+                out_index[reduce_dim] = s
+                j = index_to_position(out_index, a_strides)
+                out[o] = fn(out[o], a_storage[j])
 
     return _reduce
 

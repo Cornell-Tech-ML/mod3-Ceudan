@@ -2,6 +2,8 @@ from __future__ import annotations
 
 # import debugpy
 
+from calendar import c
+from math import e
 import random
 from typing import Iterable, Optional, Sequence, Tuple, Union
 
@@ -48,10 +50,12 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
 
     """
-    assert len(index) == len(strides), "Index and strides must have the same length."
-    pos = np.dot(index, strides)
+    position = 0
 
-    return pos
+    for ind, stride in zip(index, strides):
+        position += ind * stride
+
+    return position
 
 
 # def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -69,16 +73,11 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
 
     """
     # stores the size of a single element of this dimension (i.e. the product of all dimensions after this one)
-    size_af = np.zeros(shape.shape, dtype=np.int32)
-    mul = 1
-    for i in range(size_af.size - 1, -1, -1):
-        size_af[i] = mul
-        mul = mul * shape[i]
-
-    #  index is calculated by integer dividing the ordinal by the size of the dimension
-    for i in range(len(out_index)):
-        out_index[i] = ordinal // size_af[i]
-        ordinal = ordinal % size_af[i]
+    cur_ord = ordinal + 0
+    for i in range(len(shape)-1,-1,-1):
+        sh = shape[i]
+        out_index[i] = int(cur_ord%sh)
+        cur_ord = cur_ord//sh
 
 
 def broadcast_index(
@@ -102,36 +101,13 @@ def broadcast_index(
         None
 
     """
-    # print("big_index",big_index)
-    # print("big_shape",big_shape)
-    # print("shape",shape)
-    # print("out_index",out_index)
-    for i in range(len(shape)):
-        neg_ind = -(i + 1)
-        if shape[neg_ind] == big_shape[neg_ind]:
-            out_index[neg_ind] = big_index[neg_ind]
-        elif shape[neg_ind] == 1:
-            out_index[neg_ind] = 0
+    for i,s in enumerate(shape):
+        if s> 1:
+            out_index[i] = big_index[i + (len(big_shape) - len(shape))]
         else:
-            raise IndexingError(f"Shapes {shape} and {big_shape} are not broadcastable")
+            out_index[i] = 0
+    return None
 
-    # print("\nbig_index",big_index)
-    # print("big_shape",big_shape)
-    # print("shape",shape)
-    # print("out_index",out_index)
-    # stores the size of a single element of this dimension (i.e. the product of all dimensions after this one)
-    # size_af = np.zeros(big_shape.shape, dtype=np.int32)
-    # mul = 1
-    # for i in range(size_af.size-1, -1, -1):
-    #     size_af[i] = mul
-    #     mul = mul*big_shape[i]
-
-    # #  index is calculated by integer dividing the ordinal by the size of the dimension
-    # for i in range(out_index.size):
-    #     out_index[i] = big_index[i] // size_af[i]
-    #     #  if the index is out of range, set it to 0
-    #     if out_index[i] >= shape[i]:
-    #         out_index[i] = 0
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -151,43 +127,23 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         IndexingError : if cannot broadcast
 
     """
-    new_shape = [0 for x in range(max(len(shape1), len(shape2)))]
-    for i in range(max(len(shape1), len(shape2))):
-        neg_ind = -(i + 1)
-        # print("i",neg_ind)
-        # print("shape1",shape1)
-        # if(i < len(shape1)):
-        #     print("shape1[-i]",shape1[neg_ind])
-        # print("shape2",shape2)
-        # if(i < len(shape2)):
-        #     print("shape2[-i]",shape2[neg_ind])
-        if i < len(shape1) and i < len(shape2):
-            # try to broadcast
-            if shape1[neg_ind] == shape2[neg_ind]:
-                # sizes already the same
-                new_shape[neg_ind] = shape1[neg_ind]
-            elif shape1[neg_ind] == 1:
-                # take the size of shape2
-                new_shape[neg_ind] = shape2[neg_ind]
-            elif shape2[neg_ind] == 1:
-                # take the size of shape1
-                new_shape[neg_ind] = shape1[neg_ind]
-            else:
-                # neither size is 1 and they do not match
-                raise IndexingError(
-                    f"Shapes {shape1} and {shape2} are not broadcastable"
-                )
-        elif i >= len(shape2):
-            # shape2 ended
-            new_shape[neg_ind] = shape1[neg_ind]
-        elif i >= len(shape1):
-            # shape1 ended
-            new_shape[neg_ind] = shape2[neg_ind]
+    a,b = shape1, shape2
+    m = max(len(a), len(b))
+    c_rev = [0]*m
+    a_rev = list(reversed(a))
+    b_rev = list(reversed(b))
+    for i in range(m):
+        if(i>=len(a)):
+            c_rev[i] = b_rev[i]
+        elif(i>=len(b)):
+            c_rev[i] = a_rev[i]
         else:
-            raise (BaseException("This should not happen"))
-
-    return tuple(new_shape)
-
+            c_rev[i] = max(a_rev[i], b_rev[i])
+            if(a_rev[i]!=c_rev[i] and a_rev[i]!=1):
+                raise IndexingError(f"Shapes {a} and {b} are not broadcastable.")
+            if(b_rev[i]!=c_rev[i] and b_rev[i]!=1):
+                raise IndexingError(f"Shapes {a} and {b} are not broadcastable.")
+    return tuple(reversed(c_rev))   
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     """Return a contiguous stride for a shape"""
@@ -326,11 +282,11 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        new_shape = tuple(self.shape[i] for i in order)
-        new_strides = tuple(self._strides[i] for i in order)
-        new_TensorData = TensorData(self._storage, new_shape, new_strides)
-
-        return new_TensorData
+        return TensorData(
+            self._storage,
+            tuple(self.shape[o] for o in order),
+            tuple(self._strides[o] for o in order),
+        )
 
     def to_string(self) -> str:
         """Convert to string"""

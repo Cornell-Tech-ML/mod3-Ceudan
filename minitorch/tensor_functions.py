@@ -107,12 +107,9 @@ class All(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, dim: Tensor) -> Tensor:
         """Return 1 if all are true"""
-        # val = int(dim.item())
-        val = int(dim[0])
-        # if dim is not None:
-        #     return a.f.mul_reduce(a, int(dim.item()))\
-        if val != -77:
-            return a.f.mul_reduce(a, val)
+        d = int(dim.item())
+        if d != -1:
+            return a.f.mul_reduce(a, d)
         else:
             """REMEMBER THIS LINE: MIGHT REPLICATE IN TENSOR_ADD FUNCTION"""
             return a.f.mul_reduce(a.contiguous().view(int(operators.prod(a.shape))), 0)
@@ -121,39 +118,18 @@ class All(Function):
 # TODO: Implement for Task 2.3.
 class Mul(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Returns the product of two tensors"""
-        ctx.save_for_backward(t1, t2)
-        return t1.f.mul_zip(t1, t2)
+        ctx.save_for_backward(a, b)
+        return a.f.mul_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Returns the gradient of the loss with respect to the input"""
-        (t1, t2) = ctx.saved_values
-        # t1   (5,1,4)
-        # t2     (3,1)
-        # prod (5,3,4)
-
-        # # I am going to assume that the dimensions of t1 and t2 are the same, because I cannot yet add new dimensions
-        # grad1 = grad_output.f.mul_zip(t2,grad_output)
-        # for i in range(grad1.dims):
-        #     neg_ind = -(i+1)
-        #     if((i>=t1.dims) or (t1.shape[neg_ind]==1)):
-        #         # if the size of this dimension was 1 or did not exist in original tensor (i.e. it was added in multiplication broadcasting) sum it out via summation of multiple gradient paths theorom
-        #         grad1 = grad1.f.add_reduce(grad1,i)
-        # # view it back to original shape
-        # grad1 = non_differentiable_view(grad1, t1.shape)
-
-        # grad2 = grad_output.f.mul_zip(t1,grad_output)
-        # for i in range(grad2.dims):
-        #     neg_ind = -(i+1)
-        #     if((i>=t2.dims) or (t2.shape[neg_ind]==1)):
-        #         grad2 = grad2.f.add_reduce(grad2,i)
-        # grad2 = non_differentiable_view(grad2, t2.shape)
-
-        # return grad_output.f.inv_back_zip(t1, grad_output)
-        return grad_output.f.mul_zip(grad_output, t2), grad_output.f.mul_zip(
-            grad_output, t1
+        (a, b) = ctx.saved_values
+        return (
+            grad_output.f.mul_zip(b, grad_output),
+            grad_output.f.mul_zip(a, grad_output),
         )
 
 
@@ -168,12 +144,8 @@ class Sigmoid(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Returns the gradient of the loss with respect to the input"""
-        (out,) = ctx.saved_values
-        negout = grad_output.f.neg_map(out)
-        one_minus_out = grad_output.f.add_zip(grad_output._ensure_tensor(1), negout)
-        grad = grad_output.f.mul_zip(out, one_minus_out)
-        grad = grad_output.f.mul_zip(grad, grad_output)
-        return grad
+        sigma:Tensor = ctx.saved_values[0]
+        return sigma*(-sigma+1.0)*grad_output
 
 
 class ReLU(Function):
@@ -186,13 +158,8 @@ class ReLU(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Returns the gradient of the loss with respect to the input"""
-        (t1,) = ctx.saved_values
-        # grad = t1*0 + 1
-        grad = grad_output.f.relu_back_zip(t1, grad_output)
-        # filt = t1>0
-        # grad = grad*filt
-        # return grad_output.f.inv_back_zip(t1, grad_output)
-        return grad
+        (a,) = ctx.saved_values
+        return grad_output.f.relu_back_zip(a, grad_output)
 
 
 class Log(Function):
@@ -200,127 +167,94 @@ class Log(Function):
     def forward(ctx: Context, t1: Tensor) -> Tensor:
         """Returns the log of the input tensor"""
         ctx.save_for_backward(t1)
-        return t1.f.log_map(t1)
+        out = t1.f.log_map(t1)
+        return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Returns the gradient of the loss with respect to the input"""
-        (t1,) = ctx.saved_values
-        grad = grad_output.f.log_back_zip(t1, grad_output)
-        return grad
+        (a,) = ctx.saved_values
+        return grad_output.f.log_back_zip(a, grad_output)
 
 
 class Exp(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
         """Returns the exponential of the input tensor"""
-        # print("Exp input:",t1)
         out = t1.f.exp_map(t1)
         ctx.save_for_backward(out)
-        # print("Exp output:",out)
         return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Returns the gradient of the loss with respect to the input"""
-        (out,) = ctx.saved_values
-        # print("Exp input",t1)
-        grad = grad_output.f.mul_zip(out, grad_output)
-        # print("Exp input grad:",grad_output)
-        # print("Exp output grad:",grad)
-        return grad
-
+        (a,) = ctx.saved_values
+        return grad_output.f.mul_zip(a, grad_output)
 
 class Sum(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, dim: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Tensor) -> Tensor:
         """Sums the tensor along the specified dimension"""
-        # """Needs fixing"""
-        ctx.save_for_backward(t1, dim)
-        val = int(dim[0])
-        # if(val == -77):
-        #     # if dims not specified, sum all dims
-        #     for i in range(t1._tensor.dims):
-        #         t1 = t1.f.add_reduce(t1,i)
-        #     # reduce the dimension to 1
-        #     # t1 = non_differentiable_view(t1,(1,))
-        #     return t1
-        # else:
-        #     # sum only the specified dim
-        #     return t1.f.add_reduce(t1,val)\
-        return t1.f.add_reduce(t1, val)
+        ctx.save_for_backward(a.shape, dim)
+        return a.f.add_reduce(a, int(dim.item()))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Returns gradients of loss to inputs"""
-        (t1, dim) = ctx.saved_values
-        # grad = non_differentiable_view(grad_output, t1.shape)
-        # return grad, grad_output._ensure_tensor(0)
-        return grad_output, grad_output._ensure_tensor(0)
+        (a_shape, dim) = ctx.saved_values
+        return grad_output, 0.0
 
 
 class LT(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Check if t2 is less than t1"""
-        ctx.save_for_backward(t1, t2)
-        return t1.f.lt_zip(t1, t2)
+        ctx.save_for_backward(a.shape, b.shape)
+        return a.f.lt_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Returns zeros for the gradient"""
-        (t1, t2) = ctx.saved_values
+        (a_shape, b_shape) = ctx.saved_values
         # return grad_output.f.inv_back_zip(t1, grad_output)
-        return t1.zeros(), t2.zeros()
+        return zeros(a_shape), zeros(b_shape)
 
 
 class EQ(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Check if two tensors are equal"""
-        ctx.save_for_backward(t1, t2)
-        return t1.f.eq_zip(t1, t2)
+        ctx.save_for_backward(a.shape, b.shape)
+        return a.f.eq_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Returns zeros for the gradient"""
-        (t1, t2) = ctx.saved_values
-        return t1.zeros(), t2.zeros()
+        (a_shape, b_shape) = ctx.saved_values
+        return zeros(a_shape), zeros(b_shape)
 
 
 class IsClose(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Check if two tensors are close"""
-        ctx.save_for_backward(t1, t2)
-        return t1.f.is_close_zip(t1, t2)
+        return a.f.is_close_zip(a, b)
 
 
 class Permute(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, order: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
         """Permute the tensor to a new order"""
         # ctx.save_for_backward(order)
-        ctx.save_for_backward(t1.shape)
-        order_int = [int(val) for val in order.to_numpy()]
-        t1._tensor = t1._tensor.permute(*order_int)
-        return t1
+        ctx.save_for_backward(order)
+        return a._new(a._tensor.permute(*[int(order[i]) for i in range(order.size)]))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Needs fixing"""
-        (orig_shape,) = ctx.saved_values
-        grad = minitorch.Tensor.make(
-            grad_output._tensor._storage, orig_shape, backend=grad_output.backend
-        )
-        # print("Permute order:",order)
-        # inv_order = [0 for i in range(len(order))]
-        # for i in range(len(order)):
-        #     inv_order[order[i]] = i
-        # grad_output._tensor = grad_output._tensor.permute(*inv_order)
-        # order_der = tuple([0 for i in range(len(order))])
-        # order_der = grad_output._ensure_tensor(order_der)
-        return grad, 0.0
+        order:Tensor = ctx.saved_values[0]
+        order2: List[int] = [a[0] for a in sorted(enumerate([order[i] for i in range(order.size)]), key=lambda a: a[1])]
+        return grad_output._new(grad_output._tensor.permute(*order2)), 0.0
 
 
 class View(Function):
@@ -330,34 +264,9 @@ class View(Function):
         ctx.save_for_backward(a.shape)
         assert a._tensor.is_contiguous(), "Must be contiguous to view"
         shape2 = [int(shape[i]) for i in range(shape.size)]
-        # try:
-        #     shape2 = [int(shape[i]) for i in range(shape.size)]
-        # except Exception as e:
-        #     # Print the error message
-        #     print(f"ERROR IN VIEW FORWARD: {e}")
-        #     print("shape",shape._tensor._storage)
-        #     print("type shape",type(shape))
-        #     print("size shape",shape._tensor.shape)
-        #     print("size shape",shape.size)
-        #     for i in range(shape.size):
-        #         print("shape val type:",type(shape[i]))
-        #         print("shape val:",shape[i])
-        #     debugpy.breakpoint()
-        # try:
-        #     shape2 = [int(shape[i]) for i in range(shape.size)]
-        # except:
-        #     print("ERROR IN VIEW FORWARD \nshape-",shape._tensor,"\nshape size-",shape.size,"\na shape-",a.shape)
-        # print("shape:",shape)
-        # print("shape size:",shape.size)
-        # print("a shape:",a.shape)
-        # shape2 = [int(shape[i]) for i in range(len(shape._tensor.shape))]
         return minitorch.Tensor.make(
             a._tensor._storage, tuple(shape2), backend=a.backend
         )
-        """original code below (I removed the tuple applied on shape which should already be a tuple)"""
-        # return minitorch.Tensor.make(
-        #     a._tensor._storage, tuple(shape2), backend=a.backend
-        # )
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
