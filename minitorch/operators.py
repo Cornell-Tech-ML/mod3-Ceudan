@@ -46,7 +46,7 @@ def mul(x: float, y: float) -> float:
         float: The product of `x` and `y`.
 
     """
-    return float(x * y)
+    return x * y
 
 
 def id(x: float) -> float:
@@ -61,7 +61,7 @@ def id(x: float) -> float:
         float: The input number `x` unchanged.
 
     """
-    return float(x)
+    return x
 
 
 def add(x: float, y: float) -> float:
@@ -77,7 +77,7 @@ def add(x: float, y: float) -> float:
         float: The sum of `x` and `y`.
 
     """
-    return float(x + y)
+    return x + y
 
 
 def neg(x: float) -> float:
@@ -92,10 +92,10 @@ def neg(x: float) -> float:
         float: The negated value of `x`.
 
     """
-    return float(-1 * x)
+    return -x
 
 
-def lt(x: float, y: float) -> bool:
+def lt(x: float, y: float) -> float:
     """Checks if one number is less than another.
 
     Args:
@@ -108,10 +108,10 @@ def lt(x: float, y: float) -> bool:
         bool: `True` if `x` is less than `y`, otherwise `False`.
 
     """
-    return x < y
+    return 1.0 if x < y else 0.0
 
 
-def eq(x: float, y: float) -> bool:
+def eq(x: float, y: float) -> float:
     """Checks if two numbers are equal.
 
     Args:
@@ -124,7 +124,7 @@ def eq(x: float, y: float) -> bool:
         bool: `True` if `x` is equal to `y`, otherwise `False`.
 
     """
-    return x == y
+    return 1.0 if x==y else 0.0
 
 
 def max(x: float, y: float) -> float:
@@ -140,7 +140,7 @@ def max(x: float, y: float) -> float:
         float: The larger of `x` and `y`.
 
     """
-    return float(x) if x > y else float(y)
+    return x if x > y else y
 
 
 def is_close(x: float, y: float, tol: float = 1e-2) -> bool:
@@ -157,7 +157,7 @@ def is_close(x: float, y: float, tol: float = 1e-2) -> bool:
         bool: `True` if `x` and `y` are close within the tolerance, otherwise `False`.
 
     """
-    return abs(x - y) < tol
+    return (x-y<1e-2) and (y-x<1e-2)
 
 
 def sigmoid(x: float) -> float:
@@ -173,9 +173,9 @@ def sigmoid(x: float) -> float:
 
     """
     if x >= 0:
-        res = 1 / (1 + math.exp(-x))
+        res = 1.0 / (1.0 + math.exp(-x))
     else:
-        res = math.exp(x) / (1 + math.exp(x))
+        res = math.exp(x) / (1.0 + math.exp(x))
     return float(res)
 
 
@@ -191,12 +191,9 @@ def relu(x: float) -> float:
         float: The ReLU of `x`, which is `x` if `x > 0`, otherwise `0`.
 
     """
-    if x > 0:
-        res = x
-    else:
-        res = 0
-    return float(res)
+    return x if x>0 else 0.0
 
+EPS = 1e-6
 
 def log(x: float) -> float:
     """Calculates the natural logarithm of a number.
@@ -214,9 +211,7 @@ def log(x: float) -> float:
         ValueError: If `x` is less than or equal to 0.
 
     """
-    if x <= 0:
-        raise ValueError("Input must be positive.")
-    return float(math.log(x))
+    return math.log(x+EPS)
 
 
 def exp(x: float) -> float:
@@ -231,7 +226,7 @@ def exp(x: float) -> float:
         float: The exponential of `x`, defined as e^x.
 
     """
-    return float(math.exp(x))
+    return math.exp(x)
 
 
 def inv(x: float) -> float:
@@ -250,9 +245,7 @@ def inv(x: float) -> float:
         ZeroDivisionError: If `x` is zero.
 
     """
-    if x == 0:
-        raise ZeroDivisionError("Cannot divide by zero.")
-    return float(1 / x)
+    return 1.0 / x
 
 
 def log_back(x: float, a: float) -> float:
@@ -272,9 +265,8 @@ def log_back(x: float, a: float) -> float:
         ValueError: If `x` is less than or equal to 0.
 
     """
-    if x <= 0:
-        raise ValueError("Input must be positive.")
-    return float(a / x)
+
+    return a/(x+EPS)
 
 
 def inv_back(x: float, a: float) -> float:
@@ -290,7 +282,7 @@ def inv_back(x: float, a: float) -> float:
         float: The derivative of the reciprocal function times `a`.
 
     """
-    return float(-a / (x**2))
+    return -(1.0/x**2)*a
 
 
 def relu_back(x: float, a: float) -> float:
@@ -306,12 +298,7 @@ def relu_back(x: float, a: float) -> float:
         float: The derivative of ReLU function times `a`.
 
     """
-    if x > 0:
-        der = 1
-    else:
-        der = 0
-
-    return float(a * der)
+    return a if x>0 else 0.0
 
 
 # ## Task 0.3
