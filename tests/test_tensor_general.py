@@ -1,3 +1,10 @@
+# import debugpy
+# debugpy.listen(5679)
+# print("Waiting for debugger to attach...")
+# debugpy.wait_for_client()
+
+
+
 import random
 from typing import Callable, Dict, Iterable, List, Tuple
 
@@ -306,7 +313,7 @@ if numba.cuda.is_available():
 
 
 @given(data())
-@settings(max_examples=25)
+@settings(max_examples=26)
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad_broadcast(
@@ -348,7 +355,14 @@ def test_mm2() -> None:
     c2 = (a.view(2, 3, 1) * b.view(1, 3, 4)).sum(1).view(2, 4)
 
     for ind in c._tensor.indices():
-        assert_close(c[ind], c2[ind])
+        res = assert_close(c[ind], c2[ind])
+        if(not res):
+            print("\nFAILED")
+            print("a", a, "\nb", b, "\nout", c, "\nans", c2)
+        else:
+            print("\nPASSED")
+            print("a", a, "\nb", b, "\nout", c, "\nans", c2)
+
 
     minitorch.grad_check(lambda a, b: a @ b, a, b)
 

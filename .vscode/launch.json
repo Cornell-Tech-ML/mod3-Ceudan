@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "C:\\Users\\coden\\anaconda3\\envs\\MLEA1\\Scripts\\pytest.exe",  // Adjust path to your pytest binary
+            "args": ["-m", "task3_2", "tests/test_tensor_general.py"],
+            "justMyCode": true,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Attach to Debugpy",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5679
+            },
+            "justMyCode": true
+        }
+    ]
+}

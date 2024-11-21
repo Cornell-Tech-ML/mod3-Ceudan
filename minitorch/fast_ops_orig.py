@@ -174,20 +174,20 @@ def tensor_map(
         if not (len(out_shape)<=MAX_DIMS and len(in_shape)<=MAX_DIMS):
             raise ValueError("Shapes exceed maximum dimensions.")
 
-        if(len(out_shape)==len(in_shape) and (out_shape==in_shape).all() and (out_strides==in_strides).all()):
-            # If strides are the same, we can avoid indexing
-            for i in prange(len(out)):
-                # out[i] = fn(in_storage[i])
-                out[i] += 1
-            else:
-                for out_pos in prange(len(out)):
-                    out_ind = np.empty(MAX_DIMS, dtype=np.int32)
-                    in_ind = np.empty(MAX_DIMS, dtype=np.int32)
-                    to_index(out_pos, out_shape, out_ind)
-                    broadcast_index(out_ind, out_shape, in_shape, in_ind)
-                    in_pos = index_to_position(in_ind, in_strides)
-                    # out[out_pos] = fn(in_storage[in_pos])
-                    out[out_pos] += 1
+        # if(len(out_shape)==len(in_shape) and (out_shape==in_shape).all() and (out_strides==in_strides).all()):
+        # if(False):
+        #     # If strides are the same, we can avoid indexing
+        #     for i in prange(len(out)):
+        #         out[i] = fn(in_storage[i])
+        # else:
+        # Otherwise we need to index
+        for out_pos in prange(len(out)):
+            out_ind = np.empty(MAX_DIMS, dtype=np.int32)
+            in_ind = np.empty(MAX_DIMS, dtype=np.int32)
+            to_index(out_pos, out_shape, out_ind)
+            broadcast_index(out_ind, out_shape, in_shape, in_ind)
+            in_pos = index_to_position(in_ind, in_strides)
+            out[out_pos] = fn(in_storage[in_pos])
 
     return njit(_map, parallel=True)  # type: ignore
 
