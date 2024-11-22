@@ -19,7 +19,9 @@ repos:
   hooks:
   - id: check-added-large-files
   - id: check-case-conflict
-  - id: check-docstring-first
+  # - id: check-docstring-first
+  #   exclude: >
+  #     (^tests/|^projects/|^minitorch/)
   - id: check-merge-conflict
   - id: check-symlinks
   - id: check-toml

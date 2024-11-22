@@ -2,6 +2,8 @@ import random
 
 import numba
 
+import time
+
 import minitorch
 
 datasets = minitorch.datasets
@@ -30,7 +32,10 @@ class Network(minitorch.Module):
 
     def forward(self, x):
         # TODO: Implement for Task 3.5.
-        raise NotImplementedError("Need to implement for Task 3.5")
+        z1 = self.layer1(x).relu()
+        z2 = self.layer2(z1).relu()
+        z3 = self.layer3(z2).sigmoid()
+        return z3
 
 
 class Linear(minitorch.Module):
@@ -44,7 +49,8 @@ class Linear(minitorch.Module):
 
     def forward(self, x):
         # TODO: Implement for Task 3.5.
-        raise NotImplementedError("Need to implement for Task 3.5")
+        # raise NotImplementedError("Need to implement for Task 3.5")
+         return x @ self.weights.value+self.bias.value
 
 
 class FastTrain:
@@ -64,8 +70,9 @@ class FastTrain:
         optim = minitorch.SGD(self.model.parameters(), learning_rate)
         BATCH = 10
         losses = []
-
+        t = 0
         for epoch in range(max_epochs):
+            s = time.time()
             total_loss = 0.0
             c = list(zip(data.X, data.y))
             random.shuffle(c)
@@ -96,6 +103,8 @@ class FastTrain:
                 y2 = minitorch.tensor(data.y)
                 correct = int(((out.detach() > 0.5) == y2).sum()[0])
                 log_fn(epoch, total_loss, correct, losses)
+            t += time.time() - s
+        print("Total time per epoch (seconds):", t/max_epochs)
 
 
 if __name__ == "__main__":
@@ -116,7 +125,7 @@ if __name__ == "__main__":
     if args.DATASET == "xor":
         data = minitorch.datasets["Xor"](PTS)
     elif args.DATASET == "simple":
-        data = minitorch.datasets["Simple"].simple(PTS)
+        data = minitorch.datasets["Simple"](PTS)
     elif args.DATASET == "split":
         data = minitorch.datasets["Split"](PTS)
 
