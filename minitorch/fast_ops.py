@@ -82,6 +82,7 @@ class FastOps(TensorOps):
             # Other values when not sum.
             out = a.zeros(tuple(out_shape))
             out._tensor._storage[:] = start
+            # print("in",a,"out",out,"dim",dim,"fn",fn)
 
             f(*out.tuple(), *a.tuple(), dim)
             return out
@@ -177,17 +178,17 @@ def tensor_map(
         if(len(out_shape)==len(in_shape) and (out_shape==in_shape).all() and (out_strides==in_strides).all()):
             # If strides are the same, we can avoid indexing
             for i in prange(len(out)):
-                # out[i] = fn(in_storage[i])
-                out[i] += 1
-            else:
-                for out_pos in prange(len(out)):
-                    out_ind = np.empty(MAX_DIMS, dtype=np.int32)
-                    in_ind = np.empty(MAX_DIMS, dtype=np.int32)
-                    to_index(out_pos, out_shape, out_ind)
-                    broadcast_index(out_ind, out_shape, in_shape, in_ind)
-                    in_pos = index_to_position(in_ind, in_strides)
-                    # out[out_pos] = fn(in_storage[in_pos])
-                    out[out_pos] += 1
+                out[i] = fn(in_storage[i])
+                # out[i] += 1
+        else:
+            for out_pos in prange(len(out)):
+                out_ind = np.empty(MAX_DIMS, dtype=np.int32)
+                in_ind = np.empty(MAX_DIMS, dtype=np.int32)
+                to_index(out_pos, out_shape, out_ind)
+                broadcast_index(out_ind, out_shape, in_shape, in_ind)
+                in_pos = index_to_position(in_ind, in_strides)
+                out[out_pos] = fn(in_storage[in_pos])
+                # out[out_pos] += 1 # FIX THIS FN IT HAS PARRALELIZATION ISSUE
 
     return njit(_map, parallel=True)  # type: ignore
 
@@ -285,25 +286,24 @@ def tensor_reduce(
         # TODO: Implement for Task 3.1.
         if not (len(out_shape)<=MAX_DIMS and len(a_shape)<=MAX_DIMS):
             raise ValueError("Shapes exceed maximum dimensions.")
-            
-        # size of the dimension to reduce
-        reduce_size = a_shape[reduce_dim]
-        reduce_stride = a_strides[reduce_dim]
+        
         for i in prange(len(out)):
             # convert out_pos to out_index
             out_index:Index = np.empty(MAX_DIMS, dtype=np.int32)
+            # size of the dimension to reduce
+            reduce_size = a_shape[reduce_dim]
             to_index(i, out_shape, out_index)
             out_pos = index_to_position(out_index, out_strides) # perhaps we can use i instead ?
 
             # avoid accumulating in out during the for loop
+            reduce_stride = a_strides[reduce_dim]
+            first_a_pos = index_to_position(out_index, a_strides)
             res = out[out_pos] # init result
-            first_a_pos = index_to_position(out_index, a_shape)
-
             for s in prange(reduce_size):
                 a_pos = first_a_pos + s * reduce_stride
                 res = fn(res, float(a_storage[a_pos]))
-            # out[out_pos] = res
-            out[out_pos] = 1234
+            out[out_pos] = res
+            # out[out_pos] = 1234
             
 
     return njit(_reduce, parallel=True)  # type: ignore
