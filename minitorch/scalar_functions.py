@@ -3,6 +3,8 @@ from __future__ import annotations
 # from re import T
 from typing import TYPE_CHECKING
 
+from networkx import sigma
+
 import minitorch
 
 from . import operators
@@ -107,7 +109,7 @@ class Mul(ScalarFunction):
     def forward(ctx: Context, a: float, b: float) -> float:
         """Return the product of a and b"""
         ctx.save_for_backward(a, b)
-        return operators.mul(a, b)
+        return a*b
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
@@ -138,12 +140,12 @@ class Neg(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
         """Return the negation of a"""
-        return operators.neg(a)
+        return -a
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Derivative of the negation function is -1"""
-        return -1 * d_output
+        return -d_output
 
 
 class Sigmoid(ScalarFunction):
@@ -152,15 +154,15 @@ class Sigmoid(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
         """Return the sigmoid of a"""
-        ctx.save_for_backward(a)
-        return operators.sigmoid(a)
+        out = operators.sigmoid(a)
+        ctx.save_for_backward(out)
+        return out
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Derivative of the sigmoid function"""
-        (a,) = ctx.saved_values
-        return operators.sigmoid(a) * (1 - operators.sigmoid(a)) * d_output
-
+        s: float = ctx.saved_values[0]
+        return s*(1.0 - s)*d_output
 
 class ReLU(ScalarFunction):
     """ReLU Function"""
@@ -184,37 +186,38 @@ class Exp(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
         """Return the exponential of a"""
-        ctx.save_for_backward(a)
-        return operators.exp(a)
+        out = operators.exp(a)
+        ctx.save_for_backward(out)
+        return out
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Derivative of the exponential function is itself"""
-        (a,) = ctx.saved_values
-        return operators.exp(a) * d_output
+        out:float = ctx.saved_values[0]
+        return out * d_output
 
 
 class EQ(ScalarFunction):
     """Equal Function"""
 
     @staticmethod
-    def forward(ctx: Context, a: float, b: float) -> bool:
+    def forward(ctx: Context, a: float, b: float) -> float:
         """Return True if a is equal to b"""
-        return operators.eq(a, b)
+        return 1.0 if a == b else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
         """Derivative of the equal function is 0"""
-        return 0, 0
+        return 0.0, 0.0
 
 
 class LT(ScalarFunction):
     @staticmethod
-    def forward(ctx: Context, a: float, b: float) -> bool:
+    def forward(ctx: Context, a: float, b: float) -> float:
         """Return True if a is less than b"""
-        return operators.lt(a, b)
+        return 1.0 if a < b else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
         """Derivative of the less than function is 0"""
-        return 0, 0
+        return 0.0, 0.0

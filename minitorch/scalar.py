@@ -128,21 +128,20 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        # print("scalar's history: ",h)
-        # print("scalar's history's last function: ",h.last_fn)
-        # print("scalar's history's context: ",h.ctx)
-
         # TODO: Implement for Task 1.3.
-        dloss_dx = h.last_fn._backward(h.ctx, d_output)
-        last_inputs = h.inputs
+        # dloss_dx = h.last_fn._backward(h.ctx, d_output)
+        # last_inputs = h.inputs
+        # # for i, x in enumerate(last_inputs):
+        # #     x.accumulate_derivative(dloss_dx[i])
+        # #     yield x, dloss_dx[i]
+        # dloss_dx_formatted = []
         # for i, x in enumerate(last_inputs):
-        #     x.accumulate_derivative(dloss_dx[i])
-        #     yield x, dloss_dx[i]
-        dloss_dx_formatted = []
-        for i, x in enumerate(last_inputs):
-            dloss_dx_formatted.append((x, dloss_dx[i]))
+        #     dloss_dx_formatted.append((x, dloss_dx[i]))
+        # return dloss_dx_formatted
+        x = h.last_fn._backward(h.ctx, d_output)
+        return list(zip(h.inputs, x))
 
-        return dloss_dx_formatted
+
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.

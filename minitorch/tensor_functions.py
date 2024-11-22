@@ -470,28 +470,7 @@ but was expecting derivative %f from central difference.
             print("ERROR MESSAGE:", e)
             print(f"my grad x[{i}]:", x.grad[ind])
             ("their grad:", check)
-        #  debugpy.breakpoint()
-
-        # print("x.grad:",x.grad)
-        # print("x.grad[ind]:",x.grad[ind])
-        # print("check:",check)
 
 
-# def non_differentiable_view(tens: Tensor, shape: Tuple[int]) -> Tensor:
-#     """Reimpliment the view function but without the derivatives"""
-#     assert tens._tensor.is_contiguous(), "Must be contiguous to view"
-#     # shape = tens.shape
-#     try:
-#         shape2 = [int(shape[i]) for i in range(len(shape))]
-#     except:
-#         print("ERROR WITH SHAPES CUSTOM VIEW")
-#         print("t1 shape:", shape)
-#         print("t1 shape size:", shape.size)
-#         print("grad shape:", tens.shape)
-#         # raise BaseException("ERROR WITH SHAPES IN SUM BACKWARD")
-#     # shape2 = [int(shape[i]) for i in range(len(shape._tensor.shape))]
-#     # print("tuple shape2:",tuple(shape2))
-#     tens = minitorch.Tensor.make(
-#         tens._tensor._storage, tuple(shape2), backend=tens.backend
-#     )
-#     return tens
+
+

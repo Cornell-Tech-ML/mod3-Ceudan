@@ -326,63 +326,83 @@ X = TypeVar("X")
 N = TypeVar("N", float, int)
 
 
-def map(func: Callable[[T], U], iterable: Iterable[T]) -> List[U]:
-    """Applies a given function to each element of an iterable.
+def map(fn: Callable[[float], float]) -> Callable[[Iterable[float]], Iterable[float]]:
+    """Higher-order map.
+
+    See https://en.wikipedia.org/wiki/Map_(higher-order_function)
 
     Args:
-    ----
-        func (Callable[[T], U]): A function that takes an element of type `T` and returns a value of type `U`.
-        iterable (Iterable[T]): An iterable of elements of type `T`.
+
+    fn: Function from one value to one value.
 
     Returns:
-    -------
-        List[U]: A list of elements of type `U` obtained by applying `func` to each element of `iterable`.
 
+    A function that takes a list, applies “fn* to each element, and returns a
+    new list
     """
-    return [func(x) for x in iterable]
+
+    def _map(ls: Iterable[float]) -> Iterable[ float]:
+        ret = []
+        for x in ls:
+            ret.append( fn(x) )
+        return ret
+
+    return _map
 
 
 def zipWith(
-    func: Callable[[T, U], V], iterable1: Iterable[T], iterable2: Iterable[U]
-) -> List[V]:
-    """Combines elements from two iterables using a given function.
+fn: Callable[[float, float], float],
+) -> Callable[[Iterable[float], Iterable[float]], Iterable[float]]:
+    """Higher-order zipwith (or map2).
+
+    See https://en.wikipedia.org/wiki/Map_(higher-order_function)
 
     Args:
-    ----
-        func (Callable[[T, U], V]): A function that takes two elements (one from each iterable) and returns a value of type `V`.
-        iterable1 (Iterable[T]): The first iterable of elements of type `T`.
-        iterable2 (Iterable[U]): The second iterable of elements of type `U`.
+
+    fn: combine two values
 
     Returns:
-    -------
-        List[V]: A list of elements of type `V` obtained by applying `func` to each pair of elements from `iterable1` and `iterable2`.
 
+    Function that takes two equally sized lists “lsl* and “1ls2°, produce a new list
+    by applying fn(x, y) on each pair of elements.
     """
-    return [func(x, y) for x, y in zip(iterable1, iterable2)]
+    def _zipWith(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
+        ret = []
+        for x, y in zip(ls1, ls2):
+            ret.append(fn(x, y))
+        return ret
+
+    return _zipWith
 
 
-def reduce(func: Callable[[T, T], T], iterable: Iterable[T]) -> T:
-    """Reduces an iterable to a single value using a given function.
+
+def reduce(
+fn: Callable[[float, float], float], start: float
+) -> Callable[[Iterable[float]], float]:
+    """Higher-order reduce.
 
     Args:
-    ----
-        func (Callable[[T, T], T]): A function that takes two elements of type `T` and returns a single element of type `T`.
-        iterable (Iterable[T]): An iterable of elements of type `T`.
-        initializer (T, optional): A starting value to initialize the reduction. Defaults to None.
+
+    fn: combine two values
+    start: start value $x_0$
 
     Returns:
-    -------
-        T: A single value of type `T` obtained by reducing `iterable` using `func`.
 
+    Function that takes a list “ls* of elements
+    $x_1 \ldots x_n$ and computes the reduction :math:*fn(x_3, fn(x_2,
+    fn(x_1, x_0)))°
     """
-    it = iter(iterable)
-    value = next(it)
-    for element in it:
-        value = func(value, element)
-    return value
+
+    def _reduce(ls: Iterable[float]) -> float:
+        val = start
+        for l in ls:
+            val = fn(val, l)
+        return val
+
+    return _reduce
 
 
-def negList(lst: List[N]) -> List[N]:
+def negList(lst: Iterable[float]) -> Iterable[float]:
     """Negates all elements in a list using the `map` function.
 
     Args:
@@ -394,10 +414,10 @@ def negList(lst: List[N]) -> List[N]:
         List[float]: A list with all elements negated.
 
     """
-    return map(lambda x: -x, lst)
+    return map(neg)(lst)
 
 
-def addLists(lst1: List[N], lst2: List[N]) -> List[N]:
+def addLists(lst1: Iterable[float], lst2: Iterable[float]) -> Iterable[float]:
     """Adds corresponding elements from two lists using the `zipWith` function.
 
     Args:
@@ -410,39 +430,12 @@ def addLists(lst1: List[N], lst2: List[N]) -> List[N]:
         List[float]: A list of floats where each element is the sum of the corresponding elements in `lst1` and `lst2`.
 
     """
-    return zipWith(lambda x, y: x + y, lst1, lst2)
+    return zipWith(add)(lst1, lst2)
 
+def sum(ls: Iterable[float]) -> float:
+    """Sum up a list using ‘reduce’ and ‘add*."""
+    return reduce(add, 0.0)(ls)
 
-def sum(lst: List[float]) -> float:
-    """Sums all elements in a list using the `reduce` function.
-
-    Args:
-    ----
-        lst (List[float]): A list of floats.
-
-    Returns:
-    -------
-        float: The sum of all elements in `lst`.
-
-    """
-    if len(lst) == 0:
-        res = 0
-    else:
-        res = reduce(lambda x, y: x + y, lst)
-    return float(res)
-
-
-# def prod(lst: List[N]) -> N:
-def prod(lst: Iterable[N]) -> N:
-    """Calculates the product of all elements in a list using the `reduce` function.
-
-    Args:
-    ----
-        lst (List[float]): A list of floats.
-
-    Returns:
-    -------
-        float: The product of all elements in `lst`.
-
-    """
-    return reduce(lambda x, y: x * y, lst)
+def prod(ls: Iterable[float]) -> float:
+    """Broduct of a list using “reduce’ and ‘mul*."""
+    return reduce(mul, 1.0)(ls)

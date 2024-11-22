@@ -3,8 +3,6 @@
 # print("Waiting for debugger to attach...")
 # debugpy.wait_for_client()
 
-
-
 import random
 from typing import Callable, Dict, Iterable, List, Tuple
 
@@ -355,15 +353,21 @@ def test_mm2() -> None:
     c2 = (a.view(2, 3, 1) * b.view(1, 3, 4)).sum(1).view(2, 4)
 
     for ind in c._tensor.indices():
-        res = assert_close(c[ind], c2[ind])
-        if(not res):
-            print("\nFAILED")
-            print("a", a, "\nb", b, "\nout", c, "\nans", c2)
-        else:
-            print("\nPASSED")
-            print("a", a, "\nb", b, "\nout", c, "\nans", c2)
-
-
+        assert_close(c[ind], c2[ind])
+        # res = assert_close(c[ind], c2[ind])
+        # if(not res):
+        #     print("\nFAILED")
+        #     print("a", a, "\nb", b, "\nout", c, "\nans", c2)
+        #     for r in range(a.shape[0]):
+        #         for col in range(0,a.shape[1]):
+        #             a[r,col]=r*a.shape[1]+col
+        #     for r in range(b.shape[0]):
+        #         for col in range(0,b.shape[1]):
+        #             b[r,col]=r*b.shape[1]+col
+        #     print()
+        # else:
+        #     print("\nPASSED")
+        #     print("a", a, "\nb", b, "\nout", c, "\nans", c2)
     minitorch.grad_check(lambda a, b: a @ b, a, b)
 
 

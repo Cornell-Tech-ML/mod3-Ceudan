@@ -8,21 +8,34 @@ import random
 import minitorch
 
 
+# class Network(minitorch.Module):
+#     def __init__(self, hidden_layers):
+#         super().__init__()
+#         # TODO: Implement for Task 1.5.
+#         # self.modules = [Linear(2, hidden_layers), Linear(hidden_layers, hidden_layers), Linear(hidden_layers, 1)]
+#         self.layer1 = Linear(2, hidden_layers)
+#         self.layer2 = Linear(hidden_layers, hidden_layers)
+#         self.layer3 = Linear(hidden_layers, 1)
+#         # output = str(self.parameters())  # Capture the output as a string
+#         # raise ValueError(output)
+
+#     def forward(self, x):
+#         middle = [h.relu() for h in self.layer1.forward(x)]
+#         end = [h.relu() for h in self.layer2.forward(middle)]
+#         return self.layer3.forward(end)[0].sigmoid()
+"""Above is my personal implementation"""
 class Network(minitorch.Module):
     def __init__(self, hidden_layers):
         super().__init__()
-        # TODO: Implement for Task 1.5.
-        # self.modules = [Linear(2, hidden_layers), Linear(hidden_layers, hidden_layers), Linear(hidden_layers, 1)]
-        self.layer1 = Linear(2, hidden_layers)
-        self.layer2 = Linear(hidden_layers, hidden_layers)
+        self.layerl = Linear(2, hidden_layers)
+        self.layer2 Linear(hidden_layers, hidden_layers )
         self.layer3 = Linear(hidden_layers, 1)
-        # output = str(self.parameters())  # Capture the output as a string
-        # raise ValueError(output)
 
     def forward(self, x):
-        middle = [h.relu() for h in self.layer1.forward(x)]
-        end = [h.relu() for h in self.layer2.forward(middle)]
-        return self.layer3.forward(end)[0].sigmoid()
+        middle = [h.relu() for h in self. layerl.forward(x)]
+        end = [h.relu() for h in self.layer2.forward(middle) ]
+        return self. layer3.forward(end)[0].sigmoid( )
+
 
 
 class Linear(minitorch.Module):
@@ -47,13 +60,20 @@ class Linear(minitorch.Module):
 
     def forward(self, inputs):
         # TODO: Implement for Task 1.5.
-        outs = []
-        for j in range(len(self.bias)):
-            out = self.bias[j].value
-            for i in range(len(self.weights)):
-                out = out + self.weights[i][j].value * inputs[i]
-            outs.append(out)
-        return outs
+        # outs = []
+        # for j in range(len(self.bias)):
+        #     out = self.bias[j].value
+        #     for i in range(len(self.weights)):
+        #         out = out + self.weights[i][j].value * inputs[i]
+        #     outs.append(out)
+        # return outs
+        """Above is my personal implementation""" 
+        # TODO: Implement for Task 1.5.
+        y = [b.value for b in self.bias]
+        for i, x in enumerate(inputs):
+            for j in range(len(y)):
+                y[j] = y[j] + x * self.weights[i][j].value
+        return y
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
