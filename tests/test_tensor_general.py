@@ -306,7 +306,7 @@ if numba.cuda.is_available():
         for b in range(2):
             for i in range(size_a):
                 for j in range(size_b):
-                    print(i, j)
+                    # print(i, j)
                     assert_close(z[b, i, j], z2[b, i, j])
 
 
@@ -395,10 +395,9 @@ def test_bmm(backend: str, data: DataObject) -> None:
         .sum(2)
         .view(D, A, C)
     )
-    try:
-        assert_close_tensor(c, c2)
-    except AssertionError:
-        print("a",a)
-        print("b",b)
-        print("c",c)
-        print("c2",c2)
+    print("\n\na",a)
+    print("b",b)
+    print("c",c)
+    print("c2",c2)
+    assert_close_tensor(c, c2)
+
