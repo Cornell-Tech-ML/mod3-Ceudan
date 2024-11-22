@@ -3,7 +3,7 @@ from __future__ import annotations
 # from re import T
 from typing import TYPE_CHECKING
 
-from networkx import sigma
+# from networkx import sigma
 
 import minitorch
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from re import M
-from tkinter.tix import MAX
+# from re import M
+# from tkinter.tix import MAX
 from typing import TYPE_CHECKING, TypeVar, Any
 
 import numpy as np

@@ -3,8 +3,8 @@ from __future__ import annotations
 
 # import debugpy
 
-from operator import index
-from tkinter.tix import MAX
+# from operator import index
+# from tkinter.tix import MAX
 from typing import TYPE_CHECKING, Callable, Optional, Type
 
 import numpy as np
