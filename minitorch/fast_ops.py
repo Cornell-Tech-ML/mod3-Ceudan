@@ -316,7 +316,7 @@ def tensor_reduce(
             reduce_stride = a_strides[reduce_dim]
             first_a_pos = index_to_position(out_index, a_strides)
             res = out[out_pos]  # init result
-            for s in prange(reduce_size):
+            for s in range(reduce_size):
                 a_pos = first_a_pos + s * reduce_stride
                 res = fn(res, float(a_storage[a_pos]))
             out[out_pos] = res
