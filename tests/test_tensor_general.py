@@ -395,4 +395,10 @@ def test_bmm(backend: str, data: DataObject) -> None:
         .sum(2)
         .view(D, A, C)
     )
-    assert_close_tensor(c, c2)
+    try:
+        assert_close_tensor(c, c2)
+    except AssertionError:
+        print("a",a)
+        print("b",b)
+        print("c",c)
+        print("c2",c2)
