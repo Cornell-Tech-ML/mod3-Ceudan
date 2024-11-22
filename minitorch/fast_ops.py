@@ -170,12 +170,16 @@ def tensor_map(
         in_storage: Storage,
         in_shape: Shape,
         in_strides: Strides,
-    ) -> None:  
+    ) -> None:
         # TODO: Implement for Task 3.1.
-        if not (len(out_shape)<=MAX_DIMS and len(in_shape)<=MAX_DIMS):
+        if not (len(out_shape) <= MAX_DIMS and len(in_shape) <= MAX_DIMS):
             raise ValueError("Shapes exceed maximum dimensions.")
 
-        if(len(out_shape)==len(in_shape) and (out_shape==in_shape).all() and (out_strides==in_strides).all()):
+        if (
+            len(out_shape) == len(in_shape)
+            and (out_shape == in_shape).all()
+            and (out_strides == in_strides).all()
+        ):
             # If strides are the same, we can avoid indexing
             for i in prange(len(out)):
                 out[i] = fn(in_storage[i])
@@ -229,10 +233,21 @@ def tensor_zip(
     ) -> None:
         # TODO: Implement for Task 3.1.
         # avoid repeated initializations
-        if not (len(out_shape) <= MAX_DIMS and len(a_shape) <= MAX_DIMS and len(b_shape) <= MAX_DIMS):
+        if not (
+            len(out_shape) <= MAX_DIMS
+            and len(a_shape) <= MAX_DIMS
+            and len(b_shape) <= MAX_DIMS
+        ):
             raise ValueError("Shapes exceed maximum dimensions.")
 
-        if(len(out_shape)==len(a_shape) and len(out_shape)==len(b_shape) and (out_strides==a_strides).all() and (out_shape==a_shape).all() and (out_strides==b_strides).all() and (out_shape==b_shape).all()):
+        if (
+            len(out_shape) == len(a_shape)
+            and len(out_shape) == len(b_shape)
+            and (out_strides == a_strides).all()
+            and (out_shape == a_shape).all()
+            and (out_strides == b_strides).all()
+            and (out_shape == b_shape).all()
+        ):
             # If pos order is the same, we can avoid indexing
             for i in prange(len(out)):
                 out[i] = fn(a_storage[i], b_storage[i])
@@ -284,27 +299,28 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 3.1.
-        if not (len(out_shape)<=MAX_DIMS and len(a_shape)<=MAX_DIMS):
+        if not (len(out_shape) <= MAX_DIMS and len(a_shape) <= MAX_DIMS):
             raise ValueError("Shapes exceed maximum dimensions.")
-        
+
         for i in prange(len(out)):
             # convert out_pos to out_index
-            out_index:Index = np.empty(MAX_DIMS, dtype=np.int32)
+            out_index: Index = np.empty(MAX_DIMS, dtype=np.int32)
             # size of the dimension to reduce
             reduce_size = a_shape[reduce_dim]
             to_index(i, out_shape, out_index)
-            out_pos = index_to_position(out_index, out_strides) # perhaps we can use i instead ?
+            out_pos = index_to_position(
+                out_index, out_strides
+            )  # perhaps we can use i instead ?
 
             # avoid accumulating in out during the for loop
             reduce_stride = a_strides[reduce_dim]
             first_a_pos = index_to_position(out_index, a_strides)
-            res = out[out_pos] # init result
+            res = out[out_pos]  # init result
             for s in prange(reduce_size):
                 a_pos = first_a_pos + s * reduce_stride
                 res = fn(res, float(a_storage[a_pos]))
             out[out_pos] = res
             # out[out_pos] = 1234
-            
 
     return njit(_reduce, parallel=True)  # type: ignore
 
@@ -382,7 +398,7 @@ def _tensor_matrix_multiply(
     # # check i a rows length matches b col length
     # if(a_shape[-1]!=b_shape[-2]):
     #     raise ValueError("Shapes do not match for matrix multiplication.")
-    
+
     # # we need the batch strides to jump across batches in memory
     # o_batch_stride = out_strides[0] if out_shape[0] > 1 else 0
 

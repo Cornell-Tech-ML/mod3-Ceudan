@@ -109,7 +109,7 @@ class Mul(ScalarFunction):
     def forward(ctx: Context, a: float, b: float) -> float:
         """Return the product of a and b"""
         ctx.save_for_backward(a, b)
-        return a*b
+        return a * b
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
@@ -162,7 +162,8 @@ class Sigmoid(ScalarFunction):
     def backward(ctx: Context, d_output: float) -> float:
         """Derivative of the sigmoid function"""
         s: float = ctx.saved_values[0]
-        return s*(1.0 - s)*d_output
+        return s * (1.0 - s) * d_output
+
 
 class ReLU(ScalarFunction):
     """ReLU Function"""
@@ -193,7 +194,7 @@ class Exp(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Derivative of the exponential function is itself"""
-        out:float = ctx.saved_values[0]
+        out: float = ctx.saved_values[0]
         return out * d_output
 
 

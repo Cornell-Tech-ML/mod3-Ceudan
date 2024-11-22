@@ -144,8 +144,8 @@ class Sigmoid(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Returns the gradient of the loss with respect to the input"""
-        sigma:Tensor = ctx.saved_values[0]
-        return sigma*(-sigma+1.0)*grad_output
+        sigma: Tensor = ctx.saved_values[0]
+        return sigma * (-sigma + 1.0) * grad_output
 
 
 class ReLU(Function):
@@ -190,6 +190,7 @@ class Exp(Function):
         """Returns the gradient of the loss with respect to the input"""
         (a,) = ctx.saved_values
         return grad_output.f.mul_zip(a, grad_output)
+
 
 class Sum(Function):
     @staticmethod
@@ -252,8 +253,13 @@ class Permute(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Needs fixing"""
-        order:Tensor = ctx.saved_values[0]
-        order2: List[int] = [a[0] for a in sorted(enumerate([order[i] for i in range(order.size)]), key=lambda a: a[1])]
+        order: Tensor = ctx.saved_values[0]
+        order2: List[int] = [
+            a[0]
+            for a in sorted(
+                enumerate([order[i] for i in range(order.size)]), key=lambda a: a[1]
+            )
+        ]
         return grad_output._new(grad_output._tensor.permute(*order2)), 0.0
 
 
@@ -470,7 +476,3 @@ but was expecting derivative %f from central difference.
             print("ERROR MESSAGE:", e)
             print(f"my grad x[{i}]:", x.grad[ind])
             ("their grad:", check)
-
-
-
-

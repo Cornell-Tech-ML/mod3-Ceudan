@@ -12,6 +12,7 @@ import numba.cuda
 import numpy as np
 import numpy.typing as npt
 from numpy import array, float64
+
 # from torch import P
 from typing_extensions import TypeAlias
 
@@ -75,10 +76,10 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
     # stores the size of a single element of this dimension (i.e. the product of all dimensions after this one)
     cur_ord = ordinal + 0
-    for i in range(len(shape)-1,-1,-1):
+    for i in range(len(shape) - 1, -1, -1):
         sh = shape[i]
-        out_index[i] = cur_ord%sh
-        cur_ord = cur_ord//sh
+        out_index[i] = cur_ord % sh
+        cur_ord = cur_ord // sh
 
 
 def broadcast_index(
@@ -102,13 +103,12 @@ def broadcast_index(
         None
 
     """
-    for i,s in enumerate(shape):
-        if s> 1:
+    for i, s in enumerate(shape):
+        if s > 1:
             out_index[i] = big_index[i + (len(big_shape) - len(shape))]
         else:
             out_index[i] = 0
     return None
-
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -128,23 +128,24 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         IndexingError : if cannot broadcast
 
     """
-    a,b = shape1, shape2
+    a, b = shape1, shape2
     m = max(len(a), len(b))
-    c_rev = [0]*m
+    c_rev = [0] * m
     a_rev = list(reversed(a))
     b_rev = list(reversed(b))
     for i in range(m):
-        if(i>=len(a)):
+        if i >= len(a):
             c_rev[i] = b_rev[i]
-        elif(i>=len(b)):
+        elif i >= len(b):
             c_rev[i] = a_rev[i]
         else:
             c_rev[i] = max(a_rev[i], b_rev[i])
-            if(a_rev[i]!=c_rev[i] and a_rev[i]!=1):
+            if a_rev[i] != c_rev[i] and a_rev[i] != 1:
                 raise IndexingError(f"Shapes {a} and {b} are not broadcastable.")
-            if(b_rev[i]!=c_rev[i] and b_rev[i]!=1):
+            if b_rev[i] != c_rev[i] and b_rev[i] != 1:
                 raise IndexingError(f"Shapes {a} and {b} are not broadcastable.")
-    return tuple(reversed(c_rev))   
+    return tuple(reversed(c_rev))
+
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     """Return a contiguous stride for a shape"""
@@ -263,7 +264,7 @@ class TensorData:
         """Set a value in the tensor."""
         try:
             self._storage[self.index(key)] = val
-        except Exception as e:
+        except Exception:
             print("breakpoint")
 
     def tuple(self) -> Tuple[Storage, Shape, Strides]:

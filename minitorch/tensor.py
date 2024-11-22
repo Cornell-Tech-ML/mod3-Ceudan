@@ -303,12 +303,12 @@ class Tensor:
         shape of the tensor
 
         """
-        return self._tensor.shape\
-    
+        return self._tensor.shape
+
     @property
     def dims(self) -> int:
-        """
-        Returns
+        """Returns
+        -------
             int: dimensions of the tensor
 
         """
@@ -316,13 +316,12 @@ class Tensor:
 
     @property
     def size(self) -> int:
-        """
-        Returns
+        """Returns
+        -------
             int: size of the tensor
 
         """
         return self._tensor.size
-
 
     # Functions
     # TODO: Implement for Task 2.3.

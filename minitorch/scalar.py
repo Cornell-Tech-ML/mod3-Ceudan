@@ -141,8 +141,6 @@ class Scalar:
         x = h.last_fn._backward(h.ctx, d_output)
         return list(zip(h.inputs, x))
 
-
-
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.
 

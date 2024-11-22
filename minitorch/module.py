@@ -39,7 +39,7 @@ class Module:
     def eval(self) -> None:
         """Set the mode of this module and all descendent modules to `eval`."""
         # TODO: Implement for Task 0.4.
-        for m in self.modules(): 
+        for m in self.modules():
             m.eval()
         self.training = False
 
@@ -64,7 +64,7 @@ class Module:
     def parameters(self) -> Sequence[Parameter]:
         """Enumerate over all the parameters of this module and its descendents."""
         # TODO: Implement for Task 0.4.
-        return [j for _, j in self.named_parameters( )]
+        return [j for _, j in self.named_parameters()]
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """Manually add a parameter. Useful helper for scalar parameters.

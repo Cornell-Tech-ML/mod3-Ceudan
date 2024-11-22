@@ -16,6 +16,8 @@ ignore = [
     "**/mt_diagrams",
     "**/.*",
     "*chainrule.py*",
+    "**/minitorch",
+    "**",
 ]
 venvPath = "."
 venv = ".venv"
@@ -72,6 +74,9 @@ exclude = [
     "**/mt_diagrams/*",
     "**/minitorch/testing.py",
     "**/docs/**/*",
+    "**/minitorch/**",
+    "**/project/**",
+    "**",
 ]
 
 ignore = [

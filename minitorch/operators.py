@@ -4,7 +4,7 @@ import math
 
 
 # ## Task 0.1
-from typing import Callable, Iterable, List, TypeVar
+from typing import Callable, Iterable, TypeVar
 
 # Implementation of a prelude of elementary functions.
 # Mathematical functions:
@@ -124,7 +124,7 @@ def eq(x: float, y: float) -> float:
         bool: `True` if `x` is equal to `y`, otherwise `False`.
 
     """
-    return 1.0 if x==y else 0.0
+    return 1.0 if x == y else 0.0
 
 
 def max(x: float, y: float) -> float:
@@ -157,7 +157,7 @@ def is_close(x: float, y: float, tol: float = 1e-2) -> bool:
         bool: `True` if `x` and `y` are close within the tolerance, otherwise `False`.
 
     """
-    return (x-y<1e-2) and (y-x<1e-2)
+    return (x - y < 1e-2) and (y - x < 1e-2)
 
 
 def sigmoid(x: float) -> float:
@@ -191,9 +191,11 @@ def relu(x: float) -> float:
         float: The ReLU of `x`, which is `x` if `x > 0`, otherwise `0`.
 
     """
-    return x if x>0 else 0.0
+    return x if x > 0 else 0.0
+
 
 EPS = 1e-6
+
 
 def log(x: float) -> float:
     """Calculates the natural logarithm of a number.
@@ -211,7 +213,7 @@ def log(x: float) -> float:
         ValueError: If `x` is less than or equal to 0.
 
     """
-    return math.log(x+EPS)
+    return math.log(x + EPS)
 
 
 def exp(x: float) -> float:
@@ -265,8 +267,7 @@ def log_back(x: float, a: float) -> float:
         ValueError: If `x` is less than or equal to 0.
 
     """
-
-    return a/(x+EPS)
+    return a / (x + EPS)
 
 
 def inv_back(x: float, a: float) -> float:
@@ -282,7 +283,7 @@ def inv_back(x: float, a: float) -> float:
         float: The derivative of the reciprocal function times `a`.
 
     """
-    return -(1.0/x**2)*a
+    return -(1.0 / x**2) * a
 
 
 def relu_back(x: float, a: float) -> float:
@@ -298,7 +299,7 @@ def relu_back(x: float, a: float) -> float:
         float: The derivative of ReLU function times `a`.
 
     """
-    return a if x>0 else 0.0
+    return a if x > 0 else 0.0
 
 
 # ## Task 0.3
@@ -332,40 +333,43 @@ def map(fn: Callable[[float], float]) -> Callable[[Iterable[float]], Iterable[fl
     See https://en.wikipedia.org/wiki/Map_(higher-order_function)
 
     Args:
-
+    ----
     fn: Function from one value to one value.
 
     Returns:
-
+    -------
     A function that takes a list, applies “fn* to each element, and returns a
     new list
+
     """
 
-    def _map(ls: Iterable[float]) -> Iterable[ float]:
+    def _map(ls: Iterable[float]) -> Iterable[float]:
         ret = []
         for x in ls:
-            ret.append( fn(x) )
+            ret.append(fn(x))
         return ret
 
     return _map
 
 
 def zipWith(
-fn: Callable[[float, float], float],
+    fn: Callable[[float, float], float],
 ) -> Callable[[Iterable[float], Iterable[float]], Iterable[float]]:
     """Higher-order zipwith (or map2).
 
     See https://en.wikipedia.org/wiki/Map_(higher-order_function)
 
     Args:
-
+    ----
     fn: combine two values
 
     Returns:
-
+    -------
     Function that takes two equally sized lists “lsl* and “1ls2°, produce a new list
     by applying fn(x, y) on each pair of elements.
+
     """
+
     def _zipWith(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
         ret = []
         for x, y in zip(ls1, ls2):
@@ -375,22 +379,22 @@ fn: Callable[[float, float], float],
     return _zipWith
 
 
-
 def reduce(
-fn: Callable[[float, float], float], start: float
+    fn: Callable[[float, float], float], start: float
 ) -> Callable[[Iterable[float]], float]:
     """Higher-order reduce.
 
     Args:
-
+    ----
     fn: combine two values
     start: start value $x_0$
 
     Returns:
-
+    -------
     Function that takes a list “ls* of elements
     $x_1 \ldots x_n$ and computes the reduction :math:*fn(x_3, fn(x_2,
     fn(x_1, x_0)))°
+
     """
 
     def _reduce(ls: Iterable[float]) -> float:
@@ -432,9 +436,11 @@ def addLists(lst1: Iterable[float], lst2: Iterable[float]) -> Iterable[float]:
     """
     return zipWith(add)(lst1, lst2)
 
+
 def sum(ls: Iterable[float]) -> float:
     """Sum up a list using ‘reduce’ and ‘add*."""
     return reduce(add, 0.0)(ls)
+
 
 def prod(ls: Iterable[float]) -> float:
     """Broduct of a list using “reduce’ and ‘mul*."""

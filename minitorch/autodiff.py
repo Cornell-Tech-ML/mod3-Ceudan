@@ -1,14 +1,11 @@
+# from minitorch.scalar import Scalar # commented out to avoid circular import
+# ## Task 1.1
+# Central Difference calculation
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Tuple, Protocol
-
-# from minitorch.scalar import Scalar # commented out to avoid circular import
-
-
-# ## Task 1.1
-# Central Difference calculation
-
 
 def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) -> Any:
     r"""Computes an approximation to the derivative of `f` with respect to one arg.
@@ -184,6 +181,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
                     continue
                 derivatives.setdefault(v.unique_id, 0.0)
                 derivatives[v.unique_id] = derivatives[v.unique_id] + d
+
 
 @dataclass
 class Context:
