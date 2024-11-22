@@ -298,6 +298,7 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     cuda.syncthreads()  
     if pos%32==0:
         cache[pos]+=cache[pos+16]
+    cuda.syncthreads()
     # We stop here since the next index of 32 would spill over
     
     # return answer for each block

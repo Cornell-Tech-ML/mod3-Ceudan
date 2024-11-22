@@ -201,7 +201,7 @@ class Sum(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Returns gradients of loss to inputs"""
-        (a_shape, dim) = ctx.saved_values
+        # (a_shape, dim) = ctx.saved_values
         return grad_output, 0.0
 
 
