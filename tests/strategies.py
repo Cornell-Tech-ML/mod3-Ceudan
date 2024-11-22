@@ -14,6 +14,4 @@ med_ints = integers(min_value=1, max_value=20)
 
 
 def assert_close(a: float, b: float) -> None:
-    if(not minitorch.operators.is_close(a, b)):
-        print("breakpoint")
     assert minitorch.operators.is_close(a, b), "Failure x=%f y=%f" % (a, b)
