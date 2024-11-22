@@ -2,6 +2,8 @@ import random
 
 import numba
 
+import time
+
 import minitorch
 
 datasets = minitorch.datasets
@@ -68,8 +70,9 @@ class FastTrain:
         optim = minitorch.SGD(self.model.parameters(), learning_rate)
         BATCH = 10
         losses = []
-
+        t = 0
         for epoch in range(max_epochs):
+            s = time.time()
             total_loss = 0.0
             c = list(zip(data.X, data.y))
             random.shuffle(c)
@@ -100,6 +103,8 @@ class FastTrain:
                 y2 = minitorch.tensor(data.y)
                 correct = int(((out.detach() > 0.5) == y2).sum()[0])
                 log_fn(epoch, total_loss, correct, losses)
+            t += time.time() - s
+        print("Total time per epoch (seconds):", t/max_epochs)
 
 
 if __name__ == "__main__":
